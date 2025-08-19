@@ -1,0 +1,218 @@
+{
+    "RANSOMWARE_GENERIC": {
+      "alerts": [
+        {
+          "id": "TRI-${alertIdSuffix}",
+          "type": "Ransomware Activity Detected",
+          "severity": "Critical",
+          "status": "Open",
+          "timestamp": "${timestamp}",
+          "description": "Suspicious file encryption pattern detected on endpoint ${ipAddress} (${endpointName}). High entropy files found, potentially ${malwareName}.",
+          "ip": "${ipAddress}"
+        }
+      ],
+      "eventStream": [
+        {
+          "timestamp": "${timestamp_plus_5s}",
+          "level": "ERROR",
+          "source": "EDR-Engine",
+          "message": "Process ${malwareName} attempted unauthorized file modification on ${endpointName}."
+        },
+        {
+          "timestamp": "${timestamp_plus_10s}",
+          "level": "WARN",
+          "source": "DLP-Engine",
+          "message": "Large encrypted file transfer detected from endpoint ${ipAddress}."
+        }
+      ]
+    },
+    "CREDENTIAL_STUFFING_GENERIC": {
+      "alerts": [
+        {
+          "id": "TRI-${alertIdSuffix}",
+          "type": "Credential Stuffing Attack",
+          "severity": "High",
+          "status": "Open",
+          "timestamp": "${timestamp}",
+          "description": "Multiple failed login attempts detected for user '${username}' on ${service} from IP ${ipAddress}.",
+          "ip": "${ipAddress}"
+        }
+      ],
+      "eventStream": [
+        {
+          "timestamp": "${timestamp_plus_2s}",
+          "level": "ERROR",
+          "source": "Auth-Service",
+          "message": "Failed login attempt for user '${username}' from IP ${ipAddress} on ${service}."
+        },
+        {
+          "timestamp": "${timestamp_plus_5s}",
+          "level": "INFO",
+          "source": "SIEM",
+          "message": "Anomaly detected: High volume of failed logins for user '${username}'."
+        }
+      ]
+    },
+    "LOTL_ABUSE_GENERIC": {
+      "alerts": [
+        {
+          "id": "TRI-${alertIdSuffix}",
+          "type": "Living-off-the-Land Binary Abuse",
+          "severity": "High",
+          "status": "Open",
+          "timestamp": "${timestamp}",
+          "description": "Suspicious execution of '${processName}' with encoded commands by user '${user}' on ${ipAddress}.",
+          "ip": "${ipAddress}"
+        }
+      ],
+      "eventStream": [
+        {
+          "timestamp": "${timestamp_plus_3s}",
+          "level": "WARN",
+          "source": "EDR",
+          "message": "Process '${processName}' launched with suspicious arguments by user '${user}'."
+        },
+        {
+          "timestamp": "${timestamp_plus_7s}",
+          "level": "ERROR",
+          "source": "NDR",
+          "message": "Unusual outbound connection from ${ipAddress} to C2 server detected."
+        }
+      ]
+    },
+    "LATERAL_MOVEMENT_GENERIC": {
+      "alerts": [
+        {
+          "id": "TRI-${alertIdSuffix}",
+          "type": "Lateral Movement Detected",
+          "severity": "High",
+          "status": "Open",
+          "timestamp": "${timestamp}",
+          "description": "Unusual SMB activity from ${sourceIp} to ${destIp} with administrative share access to '${share}'.",
+          "ip": "${sourceIp}"
+        }
+      ],
+      "eventStream": [
+        {
+          "timestamp": "${timestamp_plus_4s}",
+          "level": "ERROR",
+          "source": "Network-Sensor",
+          "message": "Multiple failed SMB connections from ${sourceIp} to ${destIp}."
+        },
+        {
+          "timestamp": "${timestamp_plus_8s}",
+          "level": "INFO",
+          "source": "SIEM",
+          "message": "Admin share '${share}' accessed from suspicious source ${sourceIp}."
+        }
+      ]
+    },
+    "PHISHING_GENERIC": {
+      "alerts": [
+        {
+          "id": "TRI-${alertIdSuffix}",
+          "type": "Phishing Email with Malicious Attachment",
+          "severity": "Medium",
+          "status": "Open",
+          "timestamp": "${timestamp}",
+          "description": "Malicious attachment '${attachmentName}' detected in email from '${senderEmail}' to '${recipientEmail}'.",
+          "ip": "N/A"
+        }
+      ],
+      "eventStream": [
+        {
+          "timestamp": "${timestamp_plus_1s}",
+          "level": "INFO",
+          "source": "Email-Gateway",
+          "message": "Incoming email from '${senderEmail}' flagged for suspicious attachment."
+        },
+        {
+          "timestamp": "${timestamp_plus_5s}",
+          "level": "WARN",
+          "source": "Sandbox",
+          "message": "Detonation report for '${attachmentName}' indicates malicious behavior."
+        }
+      ]
+    },
+    "PRIV_ESCALATION_GENERIC": {
+      "alerts": [
+        {
+          "id": "TRI-${alertIdSuffix}",
+          "type": "Privilege Escalation via Token Manipulation",
+          "severity": "Critical",
+          "status": "Open",
+          "timestamp": "${timestamp}",
+          "description": "Suspicious token manipulation by user '${username}' on system '${system}' involving process '${process}'.",
+          "ip": "N/A"
+        }
+      ],
+      "eventStream": [
+        {
+          "timestamp": "${timestamp_plus_2s}",
+          "level": "ERROR",
+          "source": "EDR",
+          "message": "Access token duplication detected for user '${username}'."
+        },
+        {
+          "timestamp": "${timestamp_plus_6s}",
+          "level": "CRITICAL",
+          "source": "Windows-Security",
+          "message": "Privilege level change for user '${username}' via '${process}' detected on '${system}'."
+        }
+      ]
+    },
+    "DNS_EXFILTRATION_GENERIC": {
+      "alerts": [
+        {
+          "id": "TRI-${alertIdSuffix}",
+          "type": "Data Exfiltration via DNS Tunneling",
+          "severity": "High",
+          "status": "Open",
+          "timestamp": "${timestamp}",
+          "description": "Unusual DNS query patterns and large data volume (${dataVolume}) from ${sourceIp} to '${domain}' indicating DNS tunneling.",
+          "ip": "${sourceIp}"
+        }
+      ],
+      "eventStream": [
+        {
+          "timestamp": "${timestamp_plus_3s}",
+          "level": "WARN",
+          "source": "DNS-Monitor",
+          "message": "High volume of unusual DNS queries from ${sourceIp} to '${domain}'."
+        },
+        {
+          "timestamp": "${timestamp_plus_7s}",
+          "level": "ERROR",
+          "source": "NDR",
+          "message": "Suspected DNS tunneling activity detected from ${sourceIp}."
+        }
+      ]
+    },
+    "INSIDER_THREAT_GENERIC": {
+      "alerts": [
+        {
+          "id": "TRI-${alertIdSuffix}",
+          "type": "Insider Threat - Unusual Data Access",
+          "severity": "Medium",
+          "status": "Open",
+          "timestamp": "${timestamp}",
+          "description": "Unusual access and bulk download (${volume}) of sensitive data from '${dataShare}' by user '${username}'.",
+          "ip": "N/A"
+        }
+      ],
+      "eventStream": [
+        {
+          "timestamp": "${timestamp_plus_2s}",
+          "level": "WARN",
+          "source": "UEBA",
+          "message": "User '${username}' accessed '${dataShare}' outside normal working hours."
+        },
+        {
+          "timestamp": "${timestamp_plus_6s}",
+          "level": "ERROR",
+          "source": "DLP",
+          "message": "Bulk download of ${volume} from '${dataShare}' by user '${username}' detected."
+        }
+      ]
+    }
+  }
