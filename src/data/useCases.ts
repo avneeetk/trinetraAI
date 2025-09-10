@@ -47,6 +47,26 @@ export const useCases: UseCase[] = [
     }
   },
   {
+    "id":"9",
+    "title": "Malware C2 Communication",
+    "category": "Network Threat",
+    "detectionMethod": "XDR - Network Analysis",
+    "triggerConditions": "Beaconing traffic to known command & control server detected",
+    "description": "Trojan communicating with APT infrastructure every 300 seconds from IT workstation.",
+    "mitreAttack": ["T1071.001 - Standard Application Layer Protocol", "T1041 - Exfiltration Over C2 Channel"],
+    "logSources": ["Network Firewall Logs", "IDS/IPS Logs", "EDR Telemetry"],
+    "playbooks": ["Block C2 Domain", "Isolate Host", "Memory Analysis"],
+    "severity": "high",
+    "simulationFlow": ["UNUSUAL_DNS_QUERIES", "DETECT_DNS_TUNNELING", "ALERT_TRIGGERED", "DNS_BLOCK_RULE", "SIMULATION_COMPLETE"],
+    "soarDataTemplateId": "DNS_EXFILTRATION_GENERIC",
+    "soarDataParams": {
+        "alertIdSuffix": "MCC009",
+        "sourceIp": "198.51.100.15",
+        "domain": "malicious-c2.com",
+    }
+  },
+  
+  {
     "id": "2",
     "title": "Credential Stuffing Attack",
     "category": "Credential Abuse",
@@ -72,6 +92,7 @@ export const useCases: UseCase[] = [
       "service": "VPN"
     }
   },
+  
   {
     "id": "3",
     "title": "Living-off-the-Land Binary Abuse",
@@ -98,6 +119,7 @@ export const useCases: UseCase[] = [
       "user": "jdoe"
     }
   },
+  
   {
     "id": "4",
     "title": "Lateral Movement via SMB",
@@ -228,4 +250,5 @@ export const useCases: UseCase[] = [
       "volume": "10GB"
     }
   }
+  
 ];

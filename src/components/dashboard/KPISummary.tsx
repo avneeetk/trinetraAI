@@ -1,4 +1,3 @@
-// src/components/dashboard/KPISummary.tsx
 import React from 'react';
 import { Alert } from '../../types/dashboard';
 import { TrendingUp, AlertTriangle, Clock, CheckCircle, Shield, Activity } from 'lucide-react';

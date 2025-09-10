@@ -1,4 +1,3 @@
-// src/components/dashboard/AlertDetails.tsx
 import React from 'react';
 import { Alert } from '../../types/dashboard';
 import { CheckCircle, XCircle, Shield, User, Clock, Server, BookOpen, TrendingUp, Cpu, HardDrive, Mail } from 'lucide-react';

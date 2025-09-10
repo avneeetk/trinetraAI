@@ -1,4 +1,3 @@
-// src/components/dashboard/AlertFeed.tsx
 import React from 'react';
 import { Alert } from '../../types/dashboard';
 import { AlertTriangle, Clock, Shield } from 'lucide-react';

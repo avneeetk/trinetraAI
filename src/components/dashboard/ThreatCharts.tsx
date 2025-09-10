@@ -4,8 +4,8 @@ import {
   PieChart,
   Pie,
   Cell,
-  ComposedChart, // Use ComposedChart for a combination of bars and lines
-  Bar, // BarChart is not defined error is because this was missing
+  ComposedChart, 
+  Bar, 
   Line,
   XAxis,
   YAxis,
@@ -99,7 +99,6 @@ const createTimeBins = (alerts: Alert[], numBins = 8) => {
 
 export const ThreatCharts: React.FC<ThreatChartsProps> = React.memo(({ alerts }) => {
   const { pieData, severityData, riskData, timelineData } = useMemo(() => {
-    // This is the data aggregation logic, now memoized
     const alertsByType = alerts.reduce((acc, alert) => {
       acc[alert.type] = (acc[alert.type] || 0) + 1;
       return acc;

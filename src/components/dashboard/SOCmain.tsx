@@ -1,9 +1,6 @@
-// src/components/dashboard/SOCmain.tsx
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Play, Pause, RotateCcw, Settings } from 'lucide-react';
 
-// Import your SOAR components
 import { AlertFeed } from './AlertFeed';
 import { AlertDetails } from './AlertDetails';
 import { KPISummary } from './KPISummary';
@@ -11,7 +8,6 @@ import { LogViewer } from './LogViewer';
 import { SimulationControls } from './SimulationControls';
 import { ThreatCharts } from './ThreatCharts';
 
-// Import your Alert and LogEntry interfaces (assuming from src/types/dashboard.ts)
 import { Alert, LogEntry, SimulatedSoarData } from '../../types/dashboard';
 
 export const SOCmain: React.FC = () => {
