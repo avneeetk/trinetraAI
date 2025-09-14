@@ -54,7 +54,7 @@ def select_features(df):
 
     selected = [col for col in categorical + numeric if col in df.columns]
     df = df[selected].copy()
-
+  
     # Convert numerics safely
     for col in numeric:
         if col in df.columns:

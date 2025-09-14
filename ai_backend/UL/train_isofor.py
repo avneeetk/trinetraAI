@@ -41,7 +41,7 @@ def plot_scores(scores):
     plt.ylabel("Frequency")
     out_file = os.path.join(os.path.dirname(__file__), "anomaly_score_distribution.png")
     plt.savefig(out_file)
-    print(f"[+] Histogram saved to {out_file}")
+    print(f"[+] Histogram saved to '{out_file}'")
     plt.close()
 
 def save_anomalies(df, predictions, scores):
@@ -50,9 +50,10 @@ def save_anomalies(df, predictions, scores):
     anomalies["anomaly_label"] = predictions 
 
     anomalies_only = anomalies[anomalies["anomaly_label"] == -1]
-    anomalies_only.to_csv("anomalies.csv", index=False)
+    out_csv = os.path.join(os.path.dirname(__file__), "anomalies.csv")
+    anomalies_only.to_csv(out_csv, index=False)
 
-    print(f"[+] Anomalies saved to 'anomalies.csv' ({len(anomalies_only)} rows)")
+    print(f"[+] Anomalies saved to '{out_csv}' ({len(anomalies_only)} rows)")
 
 def plot_scatter(scores, predictions):
     plt.figure(figsize=(12,6))
@@ -63,8 +64,9 @@ def plot_scatter(scores, predictions):
     plt.xlabel("Log Index")
     plt.ylabel("Anomaly Score")
     plt.grid(True)
-    plt.savefig("scatter_anomaly_scores.png")
-    print("[+] Saved scatter plot as 'scatter_anomaly_scores.png'")
+    out_file = os.path.join(os.path.dirname(__file__), "scatter_anomaly_scores.png")
+    plt.savefig(out_file)
+    print(f"[+] Saved scatter plot as '{out_file}'")
     plt.close()
 
 def main():
