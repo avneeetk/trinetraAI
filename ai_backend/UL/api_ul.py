@@ -1,115 +1,114 @@
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel, Field
-from typing import List, Optional
-import pandas as pd
 import joblib
-import os
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+from typing import List
+import pandas as pd
+from sklearn.ensemble import IsolationForest
+import traceback
 
-app = FastAPI(
-    title="Unsupervised Log Anomaly Detection API",
-    description="Isolation Forest + Preprocessor for anomaly detection on security logs."
+app = FastAPI(title="Trinetra Anomaly Detector")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
-# ===============================
-# Paths
-# ===============================
-BASE_DIR = os.path.dirname(__file__)
-PREPROCESSOR_PATH = os.path.join(BASE_DIR, "preprocessor.pkl")
-MODEL_PATH = os.path.join(BASE_DIR, "isolation_forest.pkl")
+MODEL_PATH = "isolation_forest.pkl"
+PREPROCESSOR_PATH = "preprocessor.pkl"
 
-# Globals
-preprocessor = None
-model = None
+trained_model: IsolationForest = None
+preprocessor = joblib.load(PREPROCESSOR_PATH)
 
-# ===============================
-# Load model and preprocessor
-# ===============================
-@app.on_event("startup")
-def load_artifacts():
-    global preprocessor, model
-    if not os.path.exists(PREPROCESSOR_PATH) or not os.path.exists(MODEL_PATH):
-        raise RuntimeError("Preprocessor or model file missing. Train the model first.")
-    preprocessor = joblib.load(PREPROCESSOR_PATH)
-    model = joblib.load(MODEL_PATH)
-    print("[+] Preprocessor and Model loaded successfully.")
+# Pydantic input model
+class LogEntry(BaseModel):
+    agent_name: str
+    agent_ip: str
+    data_alert_type: str
+    hour: int
+    day_of_week: str
+    sca_score: float
+    sca_total_checks: int
+    win_system_eventID: int
 
-# ===============================
-# Input schema with training column names (via alias)
-# ===============================
-class LogInput(BaseModel):
-    agent_name: Optional[str] = Field("unknown", alias="agent.name")
-    agent_ip: Optional[str] = Field("0.0.0.0", alias="agent.ip")
-    data_alert_type: Optional[str] = Field("unknown", alias="data.alert_type")
-    data_app: Optional[str] = Field("unknown", alias="data.app")
-    data_arch: Optional[str] = Field("unknown", alias="data.arch")
-    data_vulnerability_severity: Optional[str] = Field("low", alias="data.vulnerability.severity")
-    data_win_system_channel: Optional[str] = Field("unknown", alias="data.win.system.channel")
-    data_win_system_providerName: Optional[str] = Field("unknown", alias="data.win.system.providerName")
-    data_win_system_opcode: Optional[str] = Field("unknown", alias="data.win.system.opcode")
-    data_win_eventdata_processName: Optional[str] = Field("unknown", alias="data.win.eventdata.processName")
-    data_win_eventdata_exeFileName: Optional[str] = Field("unknown", alias="data.win.eventdata.exeFileName")
-    data_win_eventdata_user: Optional[str] = Field("unknown", alias="data.win.eventdata.user")
-    data_win_eventdata_targetUserName: Optional[str] = Field("unknown", alias="data.win.eventdata.targetUserName")
-
-    data_sca_failed: Optional[float] = Field(0.0, alias="data.sca.failed")
-    data_sca_passed: Optional[float] = Field(0.0, alias="data.sca.passed")
-    data_sca_score: Optional[float] = Field(0.0, alias="data.sca.score")
-    data_sca_total_checks: Optional[float] = Field(0.0, alias="data.sca.total_checks")
-
-    data_vulnerability_cvss_cvss2_base_score: Optional[float] = Field(0.0, alias="data.vulnerability.cvss.cvss2.base_score")
-    data_vulnerability_cvss_cvss3_base_score: Optional[float] = Field(0.0, alias="data.vulnerability.cvss.cvss3.base_score")
-
-    data_win_system_eventID: Optional[float] = Field(0.0, alias="data.win.system.eventID")
-    data_win_system_eventRecordID: Optional[float] = Field(0.0, alias="data.win.system.eventRecordID")
-    data_win_system_level: Optional[float] = Field(0.0, alias="data.win.system.level")
-    data_win_system_severityValue: Optional[float] = Field(0.0, alias="data.win.system.severityValue")
-    data_win_system_processID: Optional[float] = Field(0.0, alias="data.win.system.processID")
-    data_win_system_threadID: Optional[float] = Field(0.0, alias="data.win.system.threadID")
-
-    data_winCounter_CookedValue: Optional[float] = Field(0.0, alias="data.winCounter.CookedValue")
-    data_winCounter_RawValue: Optional[float] = Field(0.0, alias="data.winCounter.RawValue")
-
-    hour: Optional[int] = 0
-    day_of_week: Optional[str] = "Monday"
-
-    class Config:
-        allow_population_by_field_name = True   # lets you send either alias or field_name
-
-
-# ===============================
-# Prediction helper
-# ===============================
-def predict(df: pd.DataFrame):
-    try:
-        X = preprocessor.transform(df)
-        scores = model.decision_function(X)
-        labels = model.predict(X)
-        return labels, scores
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Prediction failed: {str(e)}")
-
-# ===============================
-# Routes
-# ===============================
-@app.post("/predict_single/")
-def predict_single(log: LogInput):
-    # Use dict(by_alias=True) so column names match training
-    df = pd.DataFrame([log.dict(by_alias=True)])
-    labels, scores = predict(df)
-    return {
-        "anomaly_label": int(labels[0]),
-        "anomaly_score": float(scores[0]),
-        "details": "Isolation Forest anomaly detection"
+# Map frontend keys to preprocessor columns
+def map_logs_for_preprocessor(df: pd.DataFrame) -> pd.DataFrame:
+    mapping = {
+        "agent_name": "agent.name",
+        "agent_ip": "agent.ip",
+        "data_alert_type": "data.alert_type",
+        "hour": "hour",
+        "day_of_week": "day_of_week",
+        "sca_score": "data.sca.score",
+        "sca_total_checks": "data.sca.total_checks",
+        "win_system_eventID": "data.win.system.eventID"
     }
 
-@app.post("/predict_batch/")
-def predict_batch(logs: List[LogInput]):
-    df = pd.DataFrame([log.dict(by_alias=True) for log in logs])
-    labels, scores = predict(df)
-    results = []
-    for i in range(len(df)):
-        results.append({
-            "anomaly_label": int(labels[i]),
-            "anomaly_score": float(scores[i])
-        })
-    return {"results": results}
+    for old, new in mapping.items():
+        if old in df.columns:
+            df[new] = df[old]
+
+    required_columns = [
+        'agent.name', 'agent.ip', 'data.alert_type', 'data.win.system.channel',
+        'data.win.system.providerName', 'data.win.eventdata.processName',
+        'data.win.eventdata.user', 'data.win.eventdata.ruleName',
+        'data.win.system.severityValue', 'data.sca.score',
+        'data.sca.total_checks', 'data.vulnerability.cvss.cvss3.base_score',
+        'data.win.system.eventID', 'hour', 'day_of_week'
+    ]
+
+    for col in required_columns:
+        if col not in df.columns:
+            df[col] = 0 if "score" in col or "Value" in col or "ID" in col else "missing"
+
+    return df[required_columns]
+
+@app.post("/train_anomaly/")
+def train_anomaly(logs: List[LogEntry]):
+    global trained_model, preprocessor
+    try:
+        df = pd.DataFrame([log.dict() for log in logs])
+        df_mapped = map_logs_for_preprocessor(df)
+        X = preprocessor.transform(df_mapped)
+        if hasattr(X, "toarray"):
+            X = X.toarray()
+        
+        trained_model = IsolationForest(n_estimators=100, contamination=0.05, random_state=42, n_jobs=-1)
+        trained_model.fit(X)
+        joblib.dump(trained_model, MODEL_PATH)
+
+        labels = trained_model.predict(X)
+        n_anomalies = (labels == -1).sum()
+        return {"status": "success", "trained": True, "training_anomalies": int(n_anomalies)}
+
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Training failed: {e}")
+
+@app.post("/predict_anomaly/")
+def predict_anomaly(logs: List[LogEntry]):
+    global trained_model, preprocessor
+    if trained_model is None:
+        try:
+            trained_model = joblib.load(MODEL_PATH)
+        except Exception:
+            raise HTTPException(status_code=400, detail="Model not trained yet. Call /train_anomaly/ first.")
+    try:
+        df = pd.DataFrame([log.dict() for log in logs])
+        df_mapped = map_logs_for_preprocessor(df)
+        X = preprocessor.transform(df_mapped)
+        if hasattr(X, "toarray"):
+            X = X.toarray()
+        scores = trained_model.decision_function(X)
+        labels = trained_model.predict(X)
+        return [{"log_index": i, "anomaly_score": float(scores[i]), "anomaly_label": int(labels[i])} for i in range(len(df))]
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Prediction failed: {e}")
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("api_ul:app", host="0.0.0.0", port=8001, reload=True)

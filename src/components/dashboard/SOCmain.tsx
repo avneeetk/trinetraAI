@@ -7,6 +7,7 @@ import { KPISummary } from './KPISummary';
 import { LogViewer } from './LogViewer';
 import { SimulationControls } from './SimulationControls';
 import { ThreatCharts } from './ThreatCharts';
+import { AnomalyDetector } from '../AnomalyDetector';
 
 import { Alert, LogEntry, SimulatedSoarData } from '../../types/dashboard';
 
@@ -23,7 +24,7 @@ export const SOCmain: React.FC = () => {
   const [eventLogs, setEventLogs] = useState<LogEntry[]>([]);
   const [isSimulating, setIsSimulating] = useState<boolean>(false);
   const [simulationSpeed, setSimulationSpeed] = useState<number>(1500);
-
+  const [activeView, setActiveView] = useState<'dashboard' | 'anomaly_detector'>('dashboard');
   const simulationIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const allSimulatedItemsRef = useRef<( (Alert & { type: 'alert', _originalDate: Date }) | (LogEntry & { type: 'event', _originalDate: Date }) )[]>([]);
   const currentSimulatedItemIndexRef = useRef(0);
@@ -193,6 +194,25 @@ export const SOCmain: React.FC = () => {
           />
         </div>
       </div>
+      {/* NEW: Navigation to switch between Dashboard and Anomaly Detector */}
+      <div className="flex items-center gap-2 mb-4">
+        <button 
+          onClick={() => setActiveView('dashboard')} 
+          className={`px-4 py-2 rounded-md transition-colors ${activeView === 'dashboard' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+        >
+          SOAR Dashboard
+        </button>
+        <button 
+          onClick={() => setActiveView('anomaly_detector')} 
+          className={`px-4 py-2 rounded-md transition-colors ${activeView === 'anomaly_detector' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+        >
+          Anomaly Detector
+        </button>
+      </div>
+
+      {/* Conditional Rendering of the main content */}
+      {activeView === 'dashboard' ? (
+        <>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-6 mb-6">
         <KPISummary alerts={liveAlerts} />
       </div>
@@ -212,6 +232,10 @@ export const SOCmain: React.FC = () => {
       <div className="h-64 flex-shrink-0 mt-6">
         <LogViewer logs={eventLogs} />
       </div>
+      </>
+      ) : (
+        <AnomalyDetector />
+      )}
     </div>
   );
 };

@@ -9,7 +9,7 @@ import os
 RAW_FILE = os.path.join(os.path.dirname(__file__), "opensearch_reduced.csv")
 OUTPUT_FILE = os.path.join(os.path.dirname(__file__), "synthetic_testset.csv")
 
-def load_and_sample(n=100):
+def load_and_sample(n=1000):
     if not os.path.exists(RAW_FILE):
         raise FileNotFoundError(f"File not found: {RAW_FILE}")
 
@@ -17,7 +17,7 @@ def load_and_sample(n=100):
     df = pd.read_csv(RAW_FILE, low_memory=False)
 
     # Random sample
-    df = df.sample(n=min(n, len(df)), random_state=42).reset_index(drop=True)
+    df = df.sample(n=min(n, len(df)), random_state=20).reset_index(drop=True)
     print(f"[+] Sampled {df.shape[0]} rows, {df.shape[1]} columns")
     return df
 
@@ -36,7 +36,7 @@ def add_time_features(df):
         )
     return df
 
-def add_synthetic_labels(df, frac_anom: float = 0.05):
+def add_synthetic_labels(df, frac_anom: float = 0.1):
     """
     Add pseudo ground-truth labels using the IsolationForest convention:
         1  -> normal
